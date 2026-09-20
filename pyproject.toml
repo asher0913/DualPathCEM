@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dualpath-cem"
+version = "1.0.0"
+description = "Dual-path conditional entropy defence for collaborative face inference"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.24,<3",
+  "Pillow>=9,<12",
+  "torch>=2.1,<3",
+  "torchvision>=0.16,<1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<9", "ruff>=0.6,<1"]
+evaluation = [
+  "facenet-pytorch==2.6.0",
+  "lpips==0.1.4",
+  "scipy>=1.10,<2",
+]
+analysis = ["matplotlib==3.9.2", "pandas==2.2.3"]
+figures = ["CairoSVG>=2.7,<3", "playwright>=1.45,<2"]
+preparation = ["opencv-python-headless==4.8.1.78"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 96
+target-version = "py310"
+exclude = ["third_party"]
+
+[tool.ruff.lint.per-file-ignores]
+# These two entry points add the local src directory before importing the package,
+# so they remain directly runnable from an unpacked publication archive.
+"scripts/prefetch_evaluation_assets.py" = ["E402"]
+"scripts/calibrate_channel_noise.py" = ["E402"]
+"scripts/train_dual_path_facescrub.py" = ["E402"]
+"scripts/attack_dual_path_facescrub.py" = ["E402"]
+"scripts/evaluate_dual_path_utility.py" = ["E402"]
+"scripts/profile_dual_path_checkpoint.py" = ["E402"]
+"scripts/calibrate_dual_path_noise.py" = ["E402"]
+"scripts/probe_dual_path_noise_grid.py" = ["E402"]
+"scripts/export_dual_path_qualitative_grid.py" = ["E402"]
+"scripts/aggregate_dual_path_supplementary.py" = ["E402"]
