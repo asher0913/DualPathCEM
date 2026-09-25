@@ -1,6 +1,6 @@
 # DualPath-CEM Showcase
 
-[![Snapshot checks](https://github.com/asher0913/DualPath-CEM-Showcase/actions/workflows/snapshot-checks.yml/badge.svg)](https://github.com/asher0913/DualPath-CEM-Showcase/actions/workflows/snapshot-checks.yml)
+[![Snapshot checks](https://github.com/asher0913/DualPathCEM/actions/workflows/snapshot-checks.yml/badge.svg)](https://github.com/asher0913/DualPathCEM/actions/workflows/snapshot-checks.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Status: frozen snapshot](https://img.shields.io/badge/status-frozen%20showcase-59636e.svg)](SNAPSHOT.md)
 
