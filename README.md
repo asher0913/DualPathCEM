@@ -9,6 +9,20 @@ collaborative face inference. This repository is intended for technical review,
 portfolios, and interviews. Active journal experiments and collaboration remain
 in a separate private repository.
 
+## Quick start
+
+```bash
+git clone https://github.com/asher0913/DualPathCEM && cd DualPathCEM
+python3 -m venv .venv && . .venv/bin/activate && pip install -e '.[dev]'
+pytest -q && python scripts/verify_showcase.py
+```
+
+This needs Python 3.10+ and no GPU or dataset. The tests exercise the model, fusion and attack
+code on random tensors. `verify_showcase.py` checks the frozen evidence: every headline metric,
+the row count of each results table, the seeds and the exclusion policy. The `Snapshot checks`
+workflow runs the same commands on every push. Training and the attacks themselves need FaceScrub
+and a GPU (see Local checks).
+
 ## Why two paths?
 
 A split model sends an intermediate representation from a trusted client to an
@@ -74,6 +88,51 @@ Against the published CEM reference values, this snapshot records:
 The formal evidence contains 70 main attack runs, 15 repeated utility
 evaluations, 96 supplementary attack runs, a matched-capacity control, and a
 ResNet-18 control. Machine-readable tables are in [`results/`](results/).
+
+### Where the accuracy comes from
+
+Mean over the five adapted targets
+([`results/formal_component_target_level.csv`](results/formal_component_target_level.csv)):
+
+| Classifier | Top-1 accuracy |
+|---|---:|
+| Spatial path only (noisy SlotCEM tensor) | 58.69% |
+| Semantic path only (256-D token) | 74.75% |
+| Fused, before joint adaptation | 76.69% |
+| **Fused, after adaptation (DualPath-CEM)** | **81.96%** (95% CI 81.80–82.12 across target seeds) |
+
+Neither path is enough on its own. The noise that protects the spatial tensor costs it most of
+its accuracy, and the token alone is 7 points short. Calibrated fusion plus joint adaptation
+recovers the gap.
+
+## Evidence and CI coverage
+
+| Claim | Kind of evidence | File | Rerun in CI? |
+|---|---|---|---|
+| Accuracy and four attack MSEs, 5 target seeds × 3 attacker seeds | GPU experiments on real FaceScrub data | `results/formal_summary.json`, `formal_attack_runs.csv`, `formal_utility_repeats.csv` | **No:** training needs FaceScrub and a GPU. CI checks the frozen numbers, row counts and seeds with `verify_showcase.py`. |
+| Component ablation above | same | `results/formal_component_target_level.csv` | Row count only |
+| Matched-capacity and ResNet-18 controls, 96 supplementary attacks | same | `results/supplementary_summary.json`, `supplementary_attack_runs.csv` | Row count and capacity-match checks only |
+| Model, fusion and attacker code paths | unit tests on random tensors | `tests/` | Yes |
+| Published Noise_ARL+CEM row | copied from the CEM paper, not reproduced | `configs/` | n/a |
+
+Reproducibility details:
+
+- **Seeds:** target (adaptation) seeds 126–130; attacker seeds 10125, 20125 and 30125. Attacker
+  runs are averaged within a target first, then intervals are taken across targets
+  ([`results/README.md`](results/README.md)).
+- **Data:** FaceScrub is not redistributed; [`DATA.md`](DATA.md) and
+  [`results/data_manifest.json`](results/data_manifest.json) record the split, image counts and hash.
+- **Environment:** [`environment/conda-linux-64.yml`](environment/conda-linux-64.yml) pins
+  Python, PyTorch, torchvision and CUDA.
+
+## Design trade-offs
+
+| Decision | Chosen | Alternative | Why |
+|---|---|---|---|
+| Privacy vs utility | two released tensors with separate noise levels (σ = 0.31 spatial, 0.10 token) | one tensor with one noise level | One noise level has to serve both goals; separating them let the spatial path take heavy noise while the compact token carries recognition. |
+| Fusion | one learned global mixing weight and a temperature per path | a sample-dependent gate | A global rule is easier to audit and cannot learn to route individual inputs around the privacy path. |
+| Threat model | attacker sees both tensors | attacker sees only the spatial tensor | Anything weaker would overstate privacy, since the untrusted server receives both. |
+| Spatial foundation | frozen SlotCEM client shared by all adaptations | retrain end to end per seed | This saves most of the GPU budget, but intervals then measure adaptation variance only (Evidence boundary). |
 
 ## Evidence boundary
 
